@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curiosity Canvas - Jan 14, 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        .header .date {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+
+        .header .count {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .canvas {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Connection lines - SVG overlay */
+        .connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .concept-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .concept-card.tech::before { background: linear-gradient(180deg, #00d9ff, #0099cc); }
+        .concept-card.business::before { background: linear-gradient(180deg, #ffd700, #ff9500); }
+        .concept-card.ai::before { background: linear-gradient(180deg, #e94560, #ff6b6b); }
+        .concept-card.data::before { background: linear-gradient(180deg, #00ff88, #00cc6a); }
+
+        .category-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .concept-card.tech .category-tag { color: #00d9ff; }
+        .concept-card.business .category-tag { color: #ffd700; }
+        .concept-card.ai .category-tag { color: #e94560; }
+        .concept-card.data .category-tag { color: #00ff88; }
+
+        .concept-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .concept-brief {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #b0b0b0;
+            margin-bottom: 16px;
+        }
+
+        .connects-to {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        .connects-to span {
+            color: #00d9ff;
+            font-weight: 500;
+        }
+
+        /* Connections Section */
+        .connections-section {
+            margin-top: 50px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .connections-section h2 {
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .connection-item:last-child { border-bottom: none; }
+
+        .connection-line {
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, #e94560, #00d9ff);
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .connection-text {
+            font-size: 0.95rem;
+            color: #b0b0b0;
+            line-height: 1.5;
+        }
+
+        .connection-text strong {
+            color: #fff;
+        }
+
+        /* Explore More Section */
+        .explore-section {
+            margin-top: 40px;
+            background: linear-gradient(135deg, rgba(233,69,96,0.1), rgba(0,217,255,0.1));
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(233,69,96,0.2);
+        }
+
+        .explore-section h2 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+
+        .explore-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .explore-tag {
+            background: rgba(255,255,255,0.08);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .explore-tag:hover {
+            background: rgba(233,69,96,0.2);
+            border-color: #e94560;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CURIOSITY CANVAS</h1>
+        <div class="date">Tuesday, January 14, 2026</div>
+        <div class="count">7 concepts explored</div>
+    </div>
+
+    <div class="canvas">
+        <div class="concepts-grid">
+
+            <div class="concept-card tech">
+                <div class="category-tag">Software Engineering</div>
+                <div class="concept-title">Code Hardening</div>
+                <div class="concept-brief">
+                    Making software more resilient against attacks and errors. Includes input validation, removing debug code, encrypting sensitive data, and reducing attack surfaces. Think of it as "bulletproofing" your code before deployment.
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Data Lineage</span> (security audit trails)
+                </div>
+            </div>
+
+            <div class="concept-card business">
+                <div class="category-tag">Business Strategy</div>
+                <div class="concept-title">Economies of Scope</div>
+                <div class="concept-brief">
+                    Cost advantages from producing multiple products using shared resources. Unlike economies of scale (more of the same), this is about variety. Example: A dairy using the same equipment for milk, cheese, and yogurt.
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Project Mercury</span> (OpenAI's product diversification)
+                </div>
+            </div>
+
+            <div class="concept-card data">
+                <div class="category-tag">Data Science</div>
+                <div class="concept-title">Stochastic Simulation</div>
+                <div class="concept-brief">
+                    Modeling systems with random variables to predict outcomes. Used in finance (Monte Carlo), epidemiology, and AI training. Key insight: run thousands of random scenarios to understand the range of possible futures.
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Neural Engine</span> (AI training uses stochastic methods)
+                </div>
+            </div>
+
+            <div class="concept-card ai">
+                <div class="category-tag">AI Hardware</div>
+                <div class="concept-title">Neural Engine</div>
+                <div class="concept-brief">
+                    Specialized chip designed to accelerate machine learning tasks. Apple's Neural Engine can perform 15+ trillion operations/second. Distinct from GPU - optimized specifically for matrix math and inference.
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Project Mercury</span> (OpenAI's compute strategy)
+                </div>
+            </div>
+
+            <div class="concept-card data">
+                <div class="category-tag">Data Governance</div>
+                <div class="concept-title">Data Lineage</div>
+                <div class="concept-brief">
+                    Tracking data from origin through transformations to final use - like a "family tree" for your data. Essential for compliance (GDPR), debugging pipelines, and trusting AI model inputs. Answers: "Where did this data come from?"
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Code Hardening</span> (audit trails), <span>Stochastic Simulation</span> (data provenance)
+                </div>
+            </div>
+
+            <div class="concept-card ai">
+                <div class="category-tag">AI Industry</div>
+                <div class="concept-title">Project Mercury (OpenAI)</div>
+                <div class="concept-brief">
+                    OpenAI's reported initiative to build its own AI inference chips, reducing dependence on NVIDIA. Part of a broader trend of AI companies vertically integrating hardware. Connects to their $100B+ valuation ambitions.
+                </div>
+                <div class="connects-to">
+                    Connects to → <span>Neural Engine</span> (custom AI silicon trend), <span>Economies of Scope</span> (vertical integration)
+                </div>
+            </div>
+
+            <div class="concept-card tech" style="grid-column: span 1;">
+                <div class="category-tag">Today's Meta-Theme</div>
+                <div class="concept-title">🔗 The Thread</div>
+                <div class="concept-brief">
+                    Your curiosity today orbits around <strong>AI infrastructure</strong> and <strong>data trust</strong>. You're exploring how AI systems are built (Neural Engine, Mercury), how they learn (Stochastic Simulation), and how we ensure quality (Code Hardening, Data Lineage). The business angle (Economies of Scope) suggests you're thinking about strategic positioning.
+                </div>
+            </div>
+
+        </div>
+
+        <div class="connections-section">
+            <h2>🔗 How These Connect</h2>
+
+            <div class="connection-item">
+                <div class="connection-line"></div>
+                <div class="connection-text">
+                    <strong>Neural Engine + Project Mercury + Stochastic Simulation</strong> — The AI training pipeline. Stochastic methods power how models learn, Neural Engines accelerate inference, and Mercury represents the race to own this infrastructure.
+                </div>
+            </div>
+
+            <div class="connection-item">
+                <div class="connection-line"></div>
+                <div class="connection-text">
+                    <strong>Code Hardening + Data Lineage</strong> — The trust stack. Both are about ensuring reliability and auditability. Hardened code with traceable data creates systems you can actually deploy with confidence.
+                </div>
+            </div>
+
+            <div class="connection-item">
+                <div class="connection-line"></div>
+                <div class="connection-text">
+                    <strong>Economies of Scope + Project Mercury</strong> — Strategic integration. OpenAI's chip play is a textbook scope economy: using their AI expertise to expand into hardware, sharing R&D costs across inference and training.
+                </div>
+            </div>
+        </div>
+
+        <div class="explore-section">
+            <h2>✨ Adjacent Curiosities (you might explore next)</h2>
+            <div class="explore-tags">
+                <div class="explore-tag">ASIC vs FPGA (custom chip architectures)</div>
+                <div class="explore-tag">MLOps (operationalizing ML)</div>
+                <div class="explore-tag">Differential Privacy (data governance + AI)</div>
+                <div class="explore-tag">Vertical Integration (the Mercury strategy)</div>
+                <div class="explore-tag">Feature Stores (data lineage for ML)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated by your Curiosity Canvas system • Drop topics anytime, get your digest when ready
+    </div>
+</body>
+</html>
